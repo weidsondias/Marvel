@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Universo Marvel</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#12141a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#12141a;--sf:#1d202a;--tx:#ece8df;--mu:#9a9ca6;--ac:#e8b04a;--acx:#1a1303;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f1ea;--sf:#e6e1d6;--tx:#1b1d24;--mu:#5d606b;--ac:#a86d00;--acx:#fff}}
+:root[data-theme="light"]{--bg:#f4f1ea;--sf:#e6e1d6;--tx:#1b1d24;--mu:#5d606b;--ac:#a86d00;--acx:#fff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2,h3,.t{font-family:Georgia,"Times New Roman",serif}
+header{padding:16px 16px 8px}
+h1{margin:0 0 4px;font-size:26px}
+.prog{font-size:13px;color:var(--mu);margin-bottom:10px}
+.bar{height:6px;background:var(--sf);border-radius:3px;margin:6px 0 12px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac)}
+input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--sf);background:var(--sf);color:var(--tx);font:inherit}
+input:focus-visible,button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px}
+.chip{flex:none;padding:8px 14px;border-radius:99px;border:1px solid var(--sf);background:none;color:var(--mu);font:inherit;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ac);color:var(--acx);border-color:var(--ac)}
+.saga{margin:22px 16px 4px;font-size:22px;border-bottom:1px solid var(--sf);padding-bottom:6px}
+.ph{display:flex;justify-content:space-between;align-items:baseline;margin:14px 16px 8px}
+.ph h3{margin:0;font-size:17px}
+.ph span{font-size:13px;color:var(--mu)}
+.row{display:flex;gap:12px;overflow-x:auto;padding:0 16px 6px;scroll-snap-type:x proximity}
+.card{flex:none;width:124px;border:0;background:none;color:inherit;text-align:left;padding:0;cursor:pointer;scroll-snap-align:start;position:relative}
+.p{height:176px;border-radius:8px;padding:10px;display:flex;align-items:flex-end;font-size:15px;line-height:1.15;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.5);position:relative}
+.ok{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--ac);color:var(--acx);font-size:13px;display:flex;align-items:center;justify-content:center;text-shadow:none;font-weight:700}
+.m{font-size:12px;color:var(--mu);margin-top:6px}
+.empty{margin:24px 16px;color:var(--mu)}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:5}
+#sheet.on{display:flex}
+.box{background:var(--bg);width:100%;max-height:85%;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.box{animation:none}}
+.top{display:flex;gap:14px}
+.top .p{width:100px;height:150px;flex:none}
+.box h3{margin:0 0 4px;font-size:22px}
+.btn{display:block;width:100%;margin-top:12px;padding:13px;border-radius:10px;border:1px solid var(--sf);background:var(--sf);color:var(--tx);font:inherit;cursor:pointer}
+.btn.pri{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.note{font-size:13px;color:var(--mu);margin-top:8px}
+.li{display:flex;gap:12px;align-items:center;width:100%;border:0;border-bottom:1px solid var(--sf);background:none;color:inherit;text-align:left;padding:10px 16px;font:inherit;cursor:pointer}
+.li .n{flex:none;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+.li .tt{flex:1;min-width:0;display:flex;flex-direction:column}
+.li small{color:var(--mu);font-size:12px}
+.li .v{color:var(--ac);font-weight:700}
+.sec{margin:20px 16px 6px;font-size:20px}
+</style>
+</head>
+<body>
+<header>
+<h1 class="t">Universo Marvel</h1>
+<div class="prog" id="prog"></div>
+<div class="bar"><i id="fill" style="width:0"></i></div>
+<input id="q" type="search" placeholder="Buscar filme ou série" aria-label="Buscar">
+</header>
+<div class="chips" id="chips" role="group" aria-label="Filtros"></div>
+<div class="chips" id="modes" role="group" aria-label="Ordem" style="padding-top:0"></div>
+<main id="main"></main>
+<div id="sheet" role="dialog" aria-modal="true" aria-label="Detalhes"><div class="box" id="box"></div></div>
+<script>
+// [tipo, título, ano, fase, detalhe, em breve]
+var D=[
+["F","Homem de Ferro",2008,1],["F","O Incrível Hulk",2008,1],["F","Homem de Ferro 2",2010,1],["F","Thor",2011,1],["F","Capitão América: O Primeiro Vingador",2011,1],["F","Os Vingadores",2012,1],
+["F","Homem de Ferro 3",2013,2],["F","Thor: O Mundo Sombrio",2013,2],["F","Capitão América 2: O Soldado Invernal",2014,2],["F","Guardiões da Galáxia",2014,2],["F","Vingadores: Era de Ultron",2015,2],["F","Homem-Formiga",2015,2],
+["F","Capitão América: Guerra Civil",2016,3],["F","Doutor Estranho",2016,3],["F","Guardiões da Galáxia Vol. 2",2017,3],["F","Homem-Aranha: De Volta ao Lar",2017,3],["F","Thor: Ragnarok",2017,3],["F","Pantera Negra",2018,3],["F","Vingadores: Guerra Infinita",2018,3],["F","Homem-Formiga e a Vespa",2018,3],["F","Capitã Marvel",2019,3],["F","Vingadores: Ultimato",2019,3],["F","Homem-Aranha: Longe de Casa",2019,3],
+["S","WandaVision",2021,4,"1 temporada"],["S","Falcão e o Soldado Invernal",2021,4,"1 temporada"],["S","Loki",2021,4,"2 temporadas"],["S","E Se...?",2021,4,"3 temporadas"],["F","Viúva Negra",2021,4],["F","Shang-Chi e a Lenda dos Dez Anéis",2021,4],["F","Eternos",2021,4],["S","Gavião Arqueiro",2021,4,"1 temporada"],["F","Homem-Aranha: Sem Volta para Casa",2021,4],["S","Cavaleiro da Lua",2022,4,"1 temporada"],["F","Doutor Estranho no Multiverso da Loucura",2022,4],["S","Ms. Marvel",2022,4,"1 temporada"],["F","Thor: Amor e Trovão",2022,4],["S","Mulher-Hulk: Defensora de Heróis",2022,4,"1 temporada"],["F","Pantera Negra: Wakanda para Sempre",2022,4],
+["F","Homem-Formiga e a Vespa: Quantumania",2023,5],["F","Guardiões da Galáxia Vol. 3",2023,5],["S","Invasão Secreta",2023,5,"1 temporada"],["F","As Marvels",2023,5],["S","Echo",2024,5,"1 temporada"],["F","Deadpool & Wolverine",2024,5],["S","Agatha Desde Sempre",2024,5,"1 temporada"],["F","Capitão América: Admirável Mundo Novo",2025,5],["F","Thunderbolts*",2025,5],["S","Demolidor: Renascido",2025,5,"2 temporadas"],["S","Ironheart",2025,5,"1 temporada"],
+["F","Quarteto Fantástico: Primeiros Passos",2025,6],["S","Wonder Man",2026,6,"1 temporada"],["F","Homem-Aranha: Um Novo Dia",2026,6],["F","Vingadores: Doomsday",2026,6,"",1],["S","Vision Quest",2026,6,"Previsto",1]
+];
+var SAGA={1:"Saga do Infinito",4:"Saga do Multiverso"};
+var CH=["Capitão América: O Primeiro Vingador","Capitã Marvel","Homem de Ferro","Homem de Ferro 2","O Incrível Hulk","Thor","Os Vingadores","Thor: O Mundo Sombrio","Homem de Ferro 3","Capitão América 2: O Soldado Invernal","Guardiões da Galáxia","Guardiões da Galáxia Vol. 2","Vingadores: Era de Ultron","Homem-Formiga","Capitão América: Guerra Civil","Viúva Negra","Pantera Negra","Homem-Aranha: De Volta ao Lar","Doutor Estranho","Thor: Ragnarok","Homem-Formiga e a Vespa","Vingadores: Guerra Infinita","Vingadores: Ultimato","Loki","WandaVision","Falcão e o Soldado Invernal","Shang-Chi e a Lenda dos Dez Anéis","Eternos","Homem-Aranha: Longe de Casa","Homem-Aranha: Sem Volta para Casa","Gavião Arqueiro","Cavaleiro da Lua","Ms. Marvel","Doutor Estranho no Multiverso da Loucura","Thor: Amor e Trovão","Mulher-Hulk: Defensora de Heróis","Pantera Negra: Wakanda para Sempre","Homem-Formiga e a Vespa: Quantumania","Guardiões da Galáxia Vol. 3","Invasão Secreta","As Marvels","Echo","Agatha Desde Sempre","Capitão América: Admirável Mundo Novo","Thunderbolts*","Ironheart","Demolidor: Renascido","Wonder Man","Homem-Aranha: Um Novo Dia"];
+var SD=["E Se...?","Deadpool & Wolverine","Quarteto Fantástico: Primeiros Passos"];
+function rk(t){var a=CH.indexOf(t);if(a>-1)return a;a=SD.indexOf(t);return a>-1?1000+a:2000}
+function nextIdx(){var a=[];D.forEach(function(d,i){if(!d[5])a.push([st.o==="Cronológica"?rk(d[1]):i,i])});a.sort(function(x,y){return x[0]-y[0]});for(var k=0;k<a.length;k++)if(!seen[a[k][1]])return a[k][1];return -1}
+function nb(){if(st.q)return"";var n=nextIdx();if(n<0)return'<p class="note" style="margin:8px 16px">Você viu tudo do catálogo! 🎉</p>';var d=D[n];return'<h2 class="sec t" style="margin-top:8px">Próximo a assistir</h2><button class="li" data-i="'+n+'" style="border-top:1px solid var(--sf)"><span class="n t" style="background:'+bg(d[3])+'">▶</span><span class="tt"><b class="t">'+esc(d[1])+'</b><small>'+tag(d)+' · Fase '+d[3]+'</small></span></button>'}
+function chron(q){var o=[];D.forEach(function(d,i){o.push([rk(d[1]),i])});o.sort(function(a,b){return a[0]-b[0]});
+var h='<p class="note" style="margin:4px 16px">Ordem aproximada: viagens no tempo e multiverso deixam alguns encaixes discutíveis.</p>',last=-1,n=0;
+o.forEach(function(x){var i=x[1],d=D[i],g=x[0]<1000?0:x[0]<2000?1:2;
+if(st.f==="Filmes"&&d[0]!=="F")return;if(st.f==="Séries"&&d[0]!=="S")return;if(st.f==="Não vistos"&&(seen[i]||d[5]))return;if(q&&d[1].toLowerCase().indexOf(q)<0)return;
+if(g!==last){h+='<h2 class="sec t">'+["Linha principal","Fora da linha principal","Em breve"][g]+'</h2>';last=g}
+n++;h+='<button class="li" data-i="'+i+'"><span class="n t" style="background:'+bg(d[3])+'">'+(g===0?x[0]+1:"–")+'</span><span class="tt"><b class="t">'+esc(d[1])+'</b><small>'+tag(d)+' · Fase '+d[3]+'</small></span>'+(seen[i]?'<span class="v">✓</span>':"")+'</button>'});
+return n?h:'<p class="empty">Nada encontrado. Tente outro nome ou filtro.</p>'}
+var PC=[["#7a2e3b","#2b1320"],["#1f5a6b","#0d1f33"],["#4b3a7a","#1a1230"],["#8a5a1c","#2d1a08"],["#1d6b4f","#0a2a24"],["#6b2d6b","#1f0f2b"]];
+var F=["Tudo","Filmes","Séries","Não vistos"],st={f:"Tudo",q:"",o:"Lançamento"},seen={};
+try{seen=JSON.parse(localStorage.getItem("mcu-vistos")||"{}")}catch(e){seen={}}
+try{if(localStorage.getItem("mcu-modo")==="Cronológica")st.o="Cronológica"}catch(e){}
+function save(){try{localStorage.setItem("mcu-vistos",JSON.stringify(seen))}catch(e){}}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function bg(p){var c=PC[p-1];return"linear-gradient(160deg,"+c[0]+","+c[1]+")"}
+function tag(d){return(d[0]==="F"?"Filme":"Série")+" · "+d[2]}
+function card(i){var d=D[i];return'<button class="card" data-i="'+i+'"><div class="p t" style="background:'+bg(d[3])+'">'+esc(d[1])+(seen[i]?'<span class="ok" aria-label="Visto">✓</span>':"")+'</div><div class="m">'+(d[5]?"Em breve":tag(d))+'</div></button>'}
+function render(){
+var main=document.getElementById("main"),q=st.q.toLowerCase(),h="",tot=0,vis=0;
+D.forEach(function(d,i){if(!d[5]){tot++;if(seen[i])vis++}});
+document.getElementById("prog").textContent=vis+" de "+tot+" vistos";
+document.getElementById("fill").style.width=(tot?vis/tot*100:0)+"%";
+document.getElementById("chips").innerHTML=F.map(function(f){return'<button class="chip" aria-pressed="'+(f===st.f)+'" data-f="'+f+'">'+f+'</button>'}).join("");
+document.getElementById("modes").innerHTML=["Lançamento","Cronológica"].map(function(o){return'<button class="chip" aria-pressed="'+(o===st.o)+'" data-o="'+o+'">'+o+'</button>'}).join("");
+if(st.o==="Cronológica"){main.innerHTML=nb()+chron(q);return}
+var any=false;
+for(var p=1;p<=6;p++){
+var ix=[],pt=0,pv=0;
+D.forEach(function(d,i){if(d[3]!==p)return;if(!d[5]){pt++;if(seen[i])pv++}
+if(st.f==="Filmes"&&d[0]!=="F")return;if(st.f==="Séries"&&d[0]!=="S")return;if(st.f==="Não vistos"&&(seen[i]||d[5]))return;
+if(q&&d[1].toLowerCase().indexOf(q)<0)return;ix.push(i)});
+if(!ix.length)continue;any=true;
+if(SAGA[p])h+='<h2 class="saga t">'+SAGA[p]+'</h2>';
+h+='<div class="ph"><h3 class="t">Fase '+p+'</h3><span>'+pv+' de '+pt+' vistos</span></div><div class="row">'+ix.map(card).join("")+'</div>'}
+main.innerHTML=any?nb()+h:'<p class="empty">Nada encontrado. Tente outro nome ou filtro.</p>'}
+document.getElementById("chips").onclick=function(e){var f=e.target.dataset.f;if(f){st.f=f;render()}};
+document.getElementById("modes").onclick=function(e){var o=e.target.dataset.o;if(o){st.o=o;try{localStorage.setItem("mcu-modo",o)}catch(x){}render()}};
+document.getElementById("q").oninput=function(e){st.q=e.target.value;render()};
+var sh=document.getElementById("sheet"),bx=document.getElementById("box"),cur=-1;
+function lbl(i){return seen[i]?"Visto ✓ (tocar para desmarcar)":"Marcar como visto"}
+document.getElementById("main").onclick=function(e){var b=e.target.closest(".card,.li");if(!b)return;cur=+b.dataset.i;var d=D[cur];
+bx.innerHTML='<div class="top"><div class="p t" style="background:'+bg(d[3])+'">'+esc(d[1])+'</div><div><h3 class="t">'+esc(d[1])+'</h3><div class="m">'+(d[0]==="F"?"Filme":"Série")+' · '+(d[5]?"Em breve":d[2])+'<br>Fase '+d[3]+(d[4]?' · '+d[4]:"")+'</div></div></div>'+
+(d[5]?'<p class="note">Ainda não lançado. Quando sair, ele entra na contagem de vistos.</p>':'<button class="btn pri" id="v">'+lbl(cur)+'</button>')+
+'<button class="btn" disabled>Assistir</button><div class="note">Conecte uma fonte de vídeo para liberar a reprodução.</div><button class="btn" id="x">Fechar</button>';
+sh.classList.add("on");document.getElementById("x").focus()};
+function close(){var y=window.scrollY,r=[].map.call(document.querySelectorAll(".row"),function(e){return e.scrollLeft});sh.classList.remove("on");render();window.scrollTo(0,y);[].forEach.call(document.querySelectorAll(".row"),function(e,k){e.scrollLeft=r[k]||0})}
+sh.onclick=function(e){if(e.target===sh)close()};
+bx.onclick=function(e){if(e.target.id==="x")close();if(e.target.id==="v"){if(seen[cur])delete seen[cur];else seen[cur]=1;save();e.target.textContent=lbl(cur)}};
+document.onkeydown=function(e){if(e.key==="Escape"&&sh.classList.contains("on"))close()};
+render();
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+</script>
+</body>
+</html>

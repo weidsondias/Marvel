@@ -49,6 +49,8 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--ac);outline-off
 .btn.pri{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
 .btn[disabled]{opacity:.55;cursor:not-allowed}
 .note{font-size:13px;color:var(--mu);margin-top:8px}
+.p.im{font-size:0;color:transparent;text-shadow:none}
+footer{padding:24px 16px 32px;font-size:12px;color:var(--mu)}
 .li{display:flex;gap:12px;align-items:center;width:100%;border:0;border-bottom:1px solid var(--sf);background:none;color:inherit;text-align:left;padding:10px 16px;font:inherit;cursor:pointer}
 .li .n{flex:none;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
 .li .tt{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -59,14 +61,16 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--ac);outline-off
 </head>
 <body>
 <header>
-<h1 class="t">Universo Marvel</h1>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h1 class="t">Universo Marvel</h1><button id="cfg" class="chip" aria-label="Configurar TMDB">⚙ TMDB</button></div>
 <div class="prog" id="prog"></div>
 <div class="bar"><i id="fill" style="width:0"></i></div>
 <input id="q" type="search" placeholder="Buscar filme ou série" aria-label="Buscar">
 </header>
 <div class="chips" id="chips" role="group" aria-label="Filtros"></div>
 <div class="chips" id="modes" role="group" aria-label="Ordem" style="padding-top:0"></div>
+<div class="note" id="tmn" style="margin:0 16px"></div>
 <main id="main"></main>
+<footer>Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.</footer>
 <div id="sheet" role="dialog" aria-modal="true" aria-label="Detalhes"><div class="box" id="box"></div></div>
 <script>
 // [tipo, título, ano, fase, detalhe, em breve]
@@ -99,7 +103,7 @@ function save(){try{localStorage.setItem("mcu-vistos",JSON.stringify(seen))}catc
 function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function bg(p){var c=PC[p-1];return"linear-gradient(160deg,"+c[0]+","+c[1]+")"}
 function tag(d){return(d[0]==="F"?"Filme":"Série")+" · "+d[2]}
-function card(i){var d=D[i];return'<button class="card" data-i="'+i+'"><div class="p t" style="background:'+bg(d[3])+'">'+esc(d[1])+(seen[i]?'<span class="ok" aria-label="Visto">✓</span>':"")+'</div><div class="m">'+(d[5]?"Em breve":tag(d))+'</div></button>'}
+function card(i){var d=D[i];return'<button class="card" data-i="'+i+'"><div class="p t'+pc(i)+'" style="background:'+bg(d[3])+pim(i)+'">'+esc(d[1])+(seen[i]?'<span class="ok" aria-label="Visto">✓</span>':"")+'</div><div class="m">'+(d[5]?"Em breve":tag(d))+'</div></button>'}
 function render(){
 var main=document.getElementById("main"),q=st.q.toLowerCase(),h="",tot=0,vis=0;
 D.forEach(function(d,i){if(!d[5]){tot++;if(seen[i])vis++}});
@@ -124,15 +128,30 @@ document.getElementById("q").oninput=function(e){st.q=e.target.value;render()};
 var sh=document.getElementById("sheet"),bx=document.getElementById("box"),cur=-1;
 function lbl(i){return seen[i]?"Visto ✓ (tocar para desmarcar)":"Marcar como visto"}
 document.getElementById("main").onclick=function(e){var b=e.target.closest(".card,.li");if(!b)return;cur=+b.dataset.i;var d=D[cur];
-bx.innerHTML='<div class="top"><div class="p t" style="background:'+bg(d[3])+'">'+esc(d[1])+'</div><div><h3 class="t">'+esc(d[1])+'</h3><div class="m">'+(d[0]==="F"?"Filme":"Série")+' · '+(d[5]?"Em breve":d[2])+'<br>Fase '+d[3]+(d[4]?' · '+d[4]:"")+'</div></div></div>'+
+bx.innerHTML='<div class="top"><div class="p t'+pc(cur)+'" style="background:'+bg(d[3])+pim(cur)+'">'+esc(d[1])+'</div><div><h3 class="t">'+esc(d[1])+'</h3><div class="m">'+(d[0]==="F"?"Filme":"Série")+' · '+(d[5]?"Em breve":d[2])+'<br>Fase '+d[3]+(d[4]?' · '+d[4]:"")+(tm[cur]&&tm[cur].v?'<br>★ '+tm[cur].v.toFixed(1).replace(".",","):"")+'</div></div></div>'+(tm[cur]&&tm[cur].o?'<p>'+esc(tm[cur].o)+'</p>':"")+
 (d[5]?'<p class="note">Ainda não lançado. Quando sair, ele entra na contagem de vistos.</p>':'<button class="btn pri" id="v">'+lbl(cur)+'</button>')+
 '<button class="btn" disabled>Assistir</button><div class="note">Conecte uma fonte de vídeo para liberar a reprodução.</div><button class="btn" id="x">Fechar</button>';
 sh.classList.add("on");document.getElementById("x").focus()};
 function close(){var y=window.scrollY,r=[].map.call(document.querySelectorAll(".row"),function(e){return e.scrollLeft});sh.classList.remove("on");render();window.scrollTo(0,y);[].forEach.call(document.querySelectorAll(".row"),function(e,k){e.scrollLeft=r[k]||0})}
 sh.onclick=function(e){if(e.target===sh)close()};
-bx.onclick=function(e){if(e.target.id==="x")close();if(e.target.id==="v"){if(seen[cur])delete seen[cur];else seen[cur]=1;save();e.target.textContent=lbl(cur)}};
+bx.onclick=function(e){if(e.target.id==="x")close();if(e.target.id==="ks"){KEY=document.getElementById("kk").value.trim();try{localStorage.setItem("mcu-key",KEY)}catch(x){}close();load()}if(e.target.id==="v"){if(seen[cur])delete seen[cur];else seen[cur]=1;save();e.target.textContent=lbl(cur)}};
 document.onkeydown=function(e){if(e.key==="Escape"&&sh.classList.contains("on"))close()};
-render();
+var IMG="https://image.tmdb.org/t/p/w342",tm={},KEY="";
+try{tm=JSON.parse(localStorage.getItem("mcu-tmdb")||"{}");KEY=localStorage.getItem("mcu-key")||""}catch(e){}
+var EN={"Capitão América: O Primeiro Vingador":"Captain America: The First Avenger","Os Vingadores":"The Avengers","Homem de Ferro":"Iron Man","O Incrível Hulk":"The Incredible Hulk","Homem de Ferro 2":"Iron Man 2","Homem de Ferro 3":"Iron Man 3","Thor: O Mundo Sombrio":"Thor: The Dark World","Capitão América 2: O Soldado Invernal":"Captain America: The Winter Soldier","Guardiões da Galáxia":"Guardians of the Galaxy","Vingadores: Era de Ultron":"Avengers: Age of Ultron","Homem-Formiga":"Ant-Man","Capitão América: Guerra Civil":"Captain America: Civil War","Doutor Estranho":"Doctor Strange","Guardiões da Galáxia Vol. 2":"Guardians of the Galaxy Vol. 2","Homem-Aranha: De Volta ao Lar":"Spider-Man: Homecoming","Pantera Negra":"Black Panther","Vingadores: Guerra Infinita":"Avengers: Infinity War","Homem-Formiga e a Vespa":"Ant-Man and the Wasp","Capitã Marvel":"Captain Marvel","Vingadores: Ultimato":"Avengers: Endgame","Homem-Aranha: Longe de Casa":"Spider-Man: Far From Home","Falcão e o Soldado Invernal":"The Falcon and the Winter Soldier","E Se...?":"What If...?","Viúva Negra":"Black Widow","Shang-Chi e a Lenda dos Dez Anéis":"Shang-Chi and the Legend of the Ten Rings","Eternos":"Eternals","Gavião Arqueiro":"Hawkeye","Homem-Aranha: Sem Volta para Casa":"Spider-Man: No Way Home","Cavaleiro da Lua":"Moon Knight","Doutor Estranho no Multiverso da Loucura":"Doctor Strange in the Multiverse of Madness","Thor: Amor e Trovão":"Thor: Love and Thunder","Mulher-Hulk: Defensora de Heróis":"She-Hulk: Attorney at Law","Pantera Negra: Wakanda para Sempre":"Black Panther: Wakanda Forever","Homem-Formiga e a Vespa: Quantumania":"Ant-Man and the Wasp: Quantumania","Guardiões da Galáxia Vol. 3":"Guardians of the Galaxy Vol. 3","Invasão Secreta":"Secret Invasion","As Marvels":"The Marvels","Agatha Desde Sempre":"Agatha All Along","Capitão América: Admirável Mundo Novo":"Captain America: Brave New World","Thunderbolts*":"Thunderbolts","Demolidor: Renascido":"Daredevil: Born Again","Quarteto Fantástico: Primeiros Passos":"The Fantastic Four: First Steps","Homem-Aranha: Um Novo Dia":"Spider-Man: Brand New Day","Vingadores: Doomsday":"Avengers: Doomsday"};
+function pc(i){return tm[i]&&tm[i].p?" im":""}
+function pim(i){var t=tm[i];return t&&t.p?";background-image:url("+IMG+t.p+");background-size:cover;background-position:center":""}
+function note(t){document.getElementById("tmn").textContent=t}
+function paint(i){var t=tm[i];if(!t||!t.p)return;document.querySelectorAll('.card[data-i="'+i+'"] .p').forEach(function(p){p.classList.add("im");p.style.backgroundImage="url("+IMG+t.p+")";p.style.backgroundSize="cover";p.style.backgroundPosition="center"})}
+function one(i){var d=D[i],v4=KEY.length>40,u="https://api.themoviedb.org/3/search/"+(d[0]==="F"?"movie":"tv")+"?language=pt-BR&query="+encodeURIComponent(EN[d[1]]||d[1])+(d[0]==="F"?"&year=":"&first_air_date_year=")+d[2]+(v4?"":"&api_key="+encodeURIComponent(KEY));
+return fetch(u,v4?{headers:{Authorization:"Bearer "+KEY}}:{}).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(function(j){var a=j.results||[],r=a.filter(function(x){return x.poster_path})[0]||a[0];tm[i]=r?{p:r.poster_path||"",o:r.overview||"",v:r.vote_average||0}:{p:"",o:"",v:0}})}
+function load(){if(!KEY){note("Toque em ⚙ TMDB para ativar capas e sinopses.");return}
+var q=[],bad=0,act=0;D.forEach(function(d,i){if(!tm[i])q.push(i)});
+if(!q.length){note("");return}
+note("Carregando capas…");
+(function pump(){while(act<4&&q.length&&!bad){(function(i){act++;one(i).then(function(){paint(i)}).catch(function(e){if(e===401)bad=1}).then(function(){act--;if(bad){note("Chave do TMDB inválida. Toque em ⚙ TMDB para corrigir.");return}if(q.length)pump();else if(!act){note("");try{localStorage.setItem("mcu-tmdb",JSON.stringify(tm))}catch(x){}}})})(q.shift())}})()}
+document.getElementById("cfg").onclick=function(){bx.innerHTML='<h3 class="t">Chave do TMDB</h3><p class="note">Cole sua chave de API (ou o token de leitura). Ela fica salva só neste aparelho.</p><input id="kk" type="text" autocomplete="off" value="'+esc(KEY)+'" aria-label="Chave do TMDB"><button class="btn pri" id="ks">Salvar e carregar capas</button><button class="btn" id="x">Fechar</button>';sh.classList.add("on")};
+render();load();
 if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
 </script>
 </body>

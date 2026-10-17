@@ -130,8 +130,8 @@ function lbl(i){return seen[i]?"Visto ✓ (tocar para desmarcar)":"Marcar como v
 document.getElementById("main").onclick=function(e){var b=e.target.closest(".card,.li");if(!b)return;cur=+b.dataset.i;var d=D[cur];
 bx.innerHTML='<div class="top"><div class="p t'+pc(cur)+'" style="background:'+bg(d[3])+pim(cur)+'">'+esc(d[1])+'</div><div><h3 class="t">'+esc(d[1])+'</h3><div class="m">'+(d[0]==="F"?"Filme":"Série")+' · '+(d[5]?"Em breve":d[2])+'<br>Fase '+d[3]+(d[4]?' · '+d[4]:"")+(tm[cur]&&tm[cur].v?'<br>★ '+tm[cur].v.toFixed(1).replace(".",","):"")+'</div></div></div>'+(tm[cur]&&tm[cur].o?'<p>'+esc(tm[cur].o)+'</p>':"")+
 (d[5]?'<p class="note">Ainda não lançado. Quando sair, ele entra na contagem de vistos.</p>':'<button class="btn pri" id="v">'+lbl(cur)+'</button>')+
-'<button class="btn" disabled>Assistir</button><div class="note">Conecte uma fonte de vídeo para liberar a reprodução.</div><button class="btn" id="x">Fechar</button>';
-sh.classList.add("on");document.getElementById("x").focus()};
+'<div id="wp" style="margin-top:14px">Buscando onde assistir…</div><button class="btn" id="x">Fechar</button>';
+sh.classList.add("on");document.getElementById("x").focus();where(cur)};
 function close(){var y=window.scrollY,r=[].map.call(document.querySelectorAll(".row"),function(e){return e.scrollLeft});sh.classList.remove("on");render();window.scrollTo(0,y);[].forEach.call(document.querySelectorAll(".row"),function(e,k){e.scrollLeft=r[k]||0})}
 sh.onclick=function(e){if(e.target===sh)close()};
 bx.onclick=function(e){if(e.target.id==="x")close();if(e.target.id==="ks"){KEY=document.getElementById("kk").value.trim();try{localStorage.setItem("mcu-key",KEY)}catch(x){}close();load()}if(e.target.id==="v"){if(seen[cur])delete seen[cur];else seen[cur]=1;save();e.target.textContent=lbl(cur)}};
@@ -144,12 +144,24 @@ function pim(i){var t=tm[i];return t&&t.p?";background-image:url("+IMG+t.p+");ba
 function note(t){document.getElementById("tmn").textContent=t}
 function paint(i){var t=tm[i];if(!t||!t.p)return;document.querySelectorAll('.card[data-i="'+i+'"] .p').forEach(function(p){p.classList.add("im");p.style.backgroundImage="url("+IMG+t.p+")";p.style.backgroundSize="cover";p.style.backgroundPosition="center"})}
 function one(i){var d=D[i],v4=KEY.length>40,u="https://api.themoviedb.org/3/search/"+(d[0]==="F"?"movie":"tv")+"?language=pt-BR&query="+encodeURIComponent(EN[d[1]]||d[1])+(d[0]==="F"?"&year=":"&first_air_date_year=")+d[2]+(v4?"":"&api_key="+encodeURIComponent(KEY));
-return fetch(u,v4?{headers:{Authorization:"Bearer "+KEY}}:{}).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(function(j){var a=j.results||[],r=a.filter(function(x){return x.poster_path})[0]||a[0];tm[i]=r?{p:r.poster_path||"",o:r.overview||"",v:r.vote_average||0}:{p:"",o:"",v:0}})}
+return fetch(u,v4?{headers:{Authorization:"Bearer "+KEY}}:{}).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(function(j){var a=j.results||[],r=a.filter(function(x){return x.poster_path})[0]||a[0];tm[i]=r?{id:r.id,p:r.poster_path||"",o:r.overview||"",v:r.vote_average||0}:{id:0,p:"",o:"",v:0}})}
 function load(){if(!KEY){note("Toque em ⚙ TMDB para ativar capas e sinopses.");return}
-var q=[],bad=0,act=0;D.forEach(function(d,i){if(!tm[i])q.push(i)});
+var q=[],bad=0,act=0;D.forEach(function(d,i){if(!tm[i]||tm[i].id===undefined)q.push(i)});
 if(!q.length){note("");return}
 note("Carregando capas…");
 (function pump(){while(act<4&&q.length&&!bad){(function(i){act++;one(i).then(function(){paint(i)}).catch(function(e){if(e===401)bad=1}).then(function(){act--;if(bad){note("Chave do TMDB inválida. Toque em ⚙ TMDB para corrigir.");return}if(q.length)pump();else if(!act){note("");try{localStorage.setItem("mcu-tmdb",JSON.stringify(tm))}catch(x){}}})})(q.shift())}})()}
+function where(i){var el=document.getElementById("wp"),d=D[i];
+if(d[5]){el.textContent="Ainda não lançado.";return}
+if(!KEY){el.textContent="Ative o TMDB (botão ⚙ no topo) para ver onde assistir.";return}
+var v4=KEY.length>40;
+(tm[i]&&tm[i].id!==undefined?Promise.resolve():one(i)).then(function(){var t=tm[i];
+if(!t||!t.id){el.textContent="Não encontrei este título no TMDB.";return}
+return fetch("https://api.themoviedb.org/3/"+(d[0]==="F"?"movie":"tv")+"/"+t.id+"/watch/providers"+(v4?"":"?api_key="+encodeURIComponent(KEY)),v4?{headers:{Authorization:"Bearer "+KEY}}:{}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
+if(cur!==i)return;var b=j.results&&j.results.BR;
+if(!b){el.textContent="Sem informação de onde assistir no Brasil.";return}
+function nm(a){return(a||[]).map(function(x){return esc(x.provider_name)}).join(", ")}
+var h="";if(b.flatrate)h+="<b>Streaming:</b> "+nm(b.flatrate)+"<br>";if(b.rent)h+="<b>Alugar:</b> "+nm(b.rent)+"<br>";if(b.buy)h+="<b>Comprar:</b> "+nm(b.buy)+"<br>";
+el.innerHTML=(h||"Sem opções no Brasil no momento.")+(b.link?'<a class="btn pri" style="text-decoration:none;text-align:center" href="'+esc(b.link)+'" target="_blank" rel="noopener">Ver onde assistir</a>':"")+'<div class="note">Disponibilidade por JustWatch.</div>'})}).catch(function(){var e2=document.getElementById("wp");if(e2)e2.textContent="Não foi possível carregar agora. Verifique a conexão."})}
 document.getElementById("cfg").onclick=function(){bx.innerHTML='<h3 class="t">Chave do TMDB</h3><p class="note">Cole sua chave de API (ou o token de leitura). Ela fica salva só neste aparelho.</p><input id="kk" type="text" autocomplete="off" value="'+esc(KEY)+'" aria-label="Chave do TMDB"><button class="btn pri" id="ks">Salvar e carregar capas</button><button class="btn" id="x">Fechar</button>';sh.classList.add("on")};
 render();load();
 if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
